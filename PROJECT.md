@@ -1,4 +1,4 @@
-# finally-good-blocker-mac
+# finally-good-blocker-app
 
 Last updated: 2026-07-20
 

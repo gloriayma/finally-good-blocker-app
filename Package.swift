@@ -3,7 +3,7 @@
 import PackageDescription
 
 let package = Package(
-    name: "finally-good-blocker-mac",
+    name: "finally-good-blocker-app",
     platforms: [
         .macOS(.v13),
     ],

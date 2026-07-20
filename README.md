@@ -1,4 +1,4 @@
-# finally-good-blocker-mac
+# finally-good-blocker-app
 
 A deliberately small personal macOS application blocker. It observes application
 activation, hides configured targets, and presents the same invisible-progress
