@@ -9,8 +9,8 @@ let package = Package(
     ],
     products: [
         .executable(
-            name: "FinallyGoodBlockerMac",
-            targets: ["FinallyGoodBlockerMac"]
+            name: "FinallyGoodBlockerApp",
+            targets: ["FinallyGoodBlockerApp"]
         ),
     ],
     targets: [
@@ -19,9 +19,9 @@ let package = Package(
             path: "Sources/BlockerCore"
         ),
         .executableTarget(
-            name: "FinallyGoodBlockerMac",
+            name: "FinallyGoodBlockerApp",
             dependencies: ["BlockerCore"],
-            path: "Sources/FinallyGoodBlockerMac"
+            path: "Sources/FinallyGoodBlockerApp"
         ),
         .executableTarget(
             name: "AccessCalculationChecks",

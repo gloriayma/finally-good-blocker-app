@@ -4,14 +4,14 @@ set -euo pipefail
 
 script_dir="${0:A:h}"
 project_dir="${script_dir:h}"
-label="com.gloria.finally-good-blocker"
-binary_name="FinallyGoodBlockerMac"
+label="com.gloria.finally-good-blocker-app"
+binary_name="FinallyGoodBlockerApp"
 user_apps_dir="$HOME/Applications"
-installed_app="$user_apps_dir/finally-good-blocker.app"
+installed_app="$user_apps_dir/finally-good-blocker-app.app"
 agent_dir="$HOME/Library/LaunchAgents"
 agent_path="$agent_dir/$label.plist"
 agent_template="$project_dir/Resources/$label.plist"
-built_app="$project_dir/build/finally-good-blocker.app"
+built_app="$project_dir/build/finally-good-blocker-app.app"
 service_target="gui/$UID/$label"
 
 zsh "$script_dir/package-app.sh" release
@@ -21,7 +21,7 @@ launchctl bootout "$service_target" 2>/dev/null || true
 pkill -x "$binary_name" 2>/dev/null || true
 
 if [[ -e "$installed_app" ]]; then
-    if [[ "$installed_app" != "$HOME/Applications/finally-good-blocker.app" ]]; then
+    if [[ "$installed_app" != "$HOME/Applications/finally-good-blocker-app.app" ]]; then
         echo "Refusing to replace unexpected app path: $installed_app" >&2
         exit 1
     fi

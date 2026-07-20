@@ -5,8 +5,8 @@ set -euo pipefail
 script_dir="${0:A:h}"
 project_dir="${script_dir:h}"
 configuration="${1:-release}"
-binary_name="FinallyGoodBlockerMac"
-app_dir="$project_dir/build/finally-good-blocker.app"
+binary_name="FinallyGoodBlockerApp"
+app_dir="$project_dir/build/finally-good-blocker-app.app"
 contents_dir="$app_dir/Contents"
 icon_work_dir="$(mktemp -d)"
 

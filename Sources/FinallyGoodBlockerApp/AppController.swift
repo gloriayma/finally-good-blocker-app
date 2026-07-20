@@ -56,7 +56,7 @@ final class AppController: NSObject, NSApplicationDelegate {
             object: nil
         )
 
-        NSLog("finally-good-blocker is running with %d rule(s)", rulesByBundleIdentifier.count)
+        NSLog("finally-good-blocker-app is running with %d rule(s)", rulesByBundleIdentifier.count)
 
         // Leave the previous application in front until something is blocked.
         DispatchQueue.main.async {
@@ -144,7 +144,7 @@ final class AppController: NSObject, NSApplicationDelegate {
         blockerPanel.present(over: targetWindowFrame)
         if !hideRequestReportedSuccess {
             NSLog(
-                "finally-good-blocker: hide() returned false for %@; presenting the blocker anyway",
+                "finally-good-blocker-app: hide() returned false for %@; presenting the blocker anyway",
                 bundleIdentifier
             )
         }
@@ -340,20 +340,20 @@ final class AppController: NSObject, NSApplicationDelegate {
 
         let image = NSImage(
             systemSymbolName: "hourglass",
-            accessibilityDescription: "finally-good-blocker"
+            accessibilityDescription: "finally-good-blocker-app"
         )
         image?.isTemplate = true
         button.image = image
         button.imagePosition = .imageOnly
         button.title = ""
-        button.toolTip = "finally-good-blocker is running"
+        button.toolTip = "finally-good-blocker-app is running"
     }
 
 }
 
 @main
 @MainActor
-private enum FinallyGoodBlockerMain {
+private enum FinallyGoodBlockerAppMain {
     private static var controller: AppController?
 
     static func main() {

@@ -5,17 +5,17 @@
     <key>CFBundleDevelopmentRegion</key>
     <string>en</string>
     <key>CFBundleDisplayName</key>
-    <string>finally-good-blocker</string>
+    <string>finally-good-blocker-app</string>
     <key>CFBundleExecutable</key>
-    <string>FinallyGoodBlockerMac</string>
+    <string>FinallyGoodBlockerApp</string>
     <key>CFBundleIconFile</key>
     <string>AppIcon</string>
     <key>CFBundleIdentifier</key>
-    <string>com.gloria.finally-good-blocker</string>
+    <string>com.gloria.finally-good-blocker-app</string>
     <key>CFBundleInfoDictionaryVersion</key>
     <string>6.0</string>
     <key>CFBundleName</key>
-    <string>finally-good-blocker</string>
+    <string>finally-good-blocker-app</string>
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleShortVersionString</key>

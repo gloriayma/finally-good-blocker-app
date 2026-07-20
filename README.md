@@ -16,7 +16,7 @@ line developer tools rather than the full Xcode application.
 ```sh
 swift run AccessCalculationChecks
 zsh scripts/package-app.sh
-open build/finally-good-blocker.app
+open build/finally-good-blocker-app.app
 ```
 
 The packaging script creates and ad-hoc signs a development `.app` bundle.
@@ -58,7 +58,7 @@ app is not force-quit, so drafts and open conversations remain intact.
 
 ## Change blocked applications
 
-Edit `rules` in `Sources/FinallyGoodBlockerMac/AppController.swift`. Rules match
+Edit `rules` in `Sources/FinallyGoodBlockerApp/AppController.swift`. Rules match
 exact bundle identifiers and all use the same enforcement path.
 
 ## Limits

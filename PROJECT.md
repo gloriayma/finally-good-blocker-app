@@ -178,7 +178,7 @@ The implementation uses one application target and three production source files
 Sources/
 ├── BlockerCore/
 │   └── AccessCalculation.swift   # rules and pure earned-access function
-└── FinallyGoodBlockerMac/
+└── FinallyGoodBlockerApp/
     ├── AppController.swift       # app lifecycle, observation, grants, timer
     └── BlockerPanel.swift        # one window and its hold control
 ```

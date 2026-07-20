@@ -20,7 +20,7 @@ final class BlockerPanel: NSPanel {
 
         isReleasedWhenClosed = false
         isOpaque = true
-        title = "finally-good-blocker"
+        title = "finally-good-blocker-app"
         titleVisibility = .hidden
         titlebarAppearsTransparent = true
         backgroundColor = .blockerPaper

@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
     <key>Label</key>
-    <string>com.gloria.finally-good-blocker</string>
+    <string>com.gloria.finally-good-blocker-app</string>
     <key>ProgramArguments</key>
     <array>
         <string>__EXECUTABLE_PATH__</string>
