@@ -25,7 +25,6 @@ final class AppController: NSObject, NSApplicationDelegate {
     private var grantTimer: Timer?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        installMainMenu()
         installStatusItem()
 
         blockerPanel.onHoldFinished = { [weak self] heldSeconds in
@@ -207,7 +206,7 @@ final class AppController: NSObject, NSApplicationDelegate {
 
     private func startGrantCountdown(for rule: Rule, until deadline: Date) {
         grantTimer?.invalidate()
-        updateDockBadge(until: deadline)
+        updateCountdown(until: deadline)
 
         let timer = Timer(
             timeInterval: 1,
@@ -230,7 +229,7 @@ final class AppController: NSObject, NSApplicationDelegate {
         }
 
         guard Date.now >= deadline else {
-            updateDockBadge(until: deadline)
+            updateCountdown(until: deadline)
             return
         }
 
@@ -288,14 +287,11 @@ final class AppController: NSObject, NSApplicationDelegate {
         .max(by: { $0.width * $0.height < $1.width * $1.height })
     }
 
-    private func updateDockBadge(until deadline: Date) {
+    private func updateCountdown(until deadline: Date) {
         let remainingSeconds = max(0, Int(ceil(deadline.timeIntervalSinceNow)))
         let minutes = remainingSeconds / 60
         let seconds = remainingSeconds % 60
         let countdown = String(format: "%d:%02d", minutes, seconds)
-
-        NSApp.dockTile.badgeLabel = countdown
-        NSApp.dockTile.display()
 
         statusItem?.button?.image = nil
         statusItem?.button?.title = countdown
@@ -309,8 +305,6 @@ final class AppController: NSObject, NSApplicationDelegate {
     private func stopGrantCountdown() {
         grantTimer?.invalidate()
         grantTimer = nil
-        NSApp.dockTile.badgeLabel = nil
-        NSApp.dockTile.display()
         showIdleStatusItem()
     }
 
@@ -327,11 +321,13 @@ final class AppController: NSObject, NSApplicationDelegate {
             withLength: NSStatusItem.variableLength
         )
         let menu = NSMenu()
-        menu.addItem(
-            withTitle: "Quit finally-good-blocker",
-            action: #selector(NSApplication.terminate(_:)),
-            keyEquivalent: "q"
+        let protectedItem = NSMenuItem(
+            title: "Blocker stays running",
+            action: nil,
+            keyEquivalent: ""
         )
+        protectedItem.isEnabled = false
+        menu.addItem(protectedItem)
         statusItem.menu = menu
         self.statusItem = statusItem
         showIdleStatusItem()
@@ -353,24 +349,6 @@ final class AppController: NSObject, NSApplicationDelegate {
         button.toolTip = "finally-good-blocker is running"
     }
 
-    private func installMainMenu() {
-        let mainMenu = NSMenu()
-        let applicationMenuItem = NSMenuItem(
-            title: "finally-good-blocker",
-            action: nil,
-            keyEquivalent: ""
-        )
-        let applicationMenu = NSMenu(title: "finally-good-blocker")
-
-        applicationMenu.addItem(
-            withTitle: "Quit finally-good-blocker",
-            action: #selector(NSApplication.terminate(_:)),
-            keyEquivalent: "q"
-        )
-        applicationMenuItem.submenu = applicationMenu
-        mainMenu.addItem(applicationMenuItem)
-        NSApp.mainMenu = mainMenu
-    }
 }
 
 @main
@@ -383,7 +361,7 @@ private enum FinallyGoodBlockerMain {
         let controller = AppController()
         self.controller = controller
         application.delegate = controller
-        application.setActivationPolicy(.regular)
+        application.setActivationPolicy(.accessory)
         application.run()
     }
 }

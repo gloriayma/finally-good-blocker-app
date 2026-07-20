@@ -13,13 +13,14 @@ unchanging `press and hold` control. A sufficiently long hold grants temporary
 access to that application.
 
 This is not parental control, security software, or tamper-resistant enforcement.
-Quitting or disabling it is an accepted bypass.
+Deliberately unloading or deleting its per-user LaunchAgent remains an accepted
+bypass.
 
 ## Smallest useful version
 
 The first version does only the following:
 
-1. Start as an ordinary macOS application with a Dock icon.
+1. Start as a menu-bar application managed by one per-user LaunchAgent.
 2. Keep a short, hard-coded list of blocked bundle identifiers and timing values.
 3. Observe foreground application activation with `NSWorkspace`.
 4. When a configured application activates without an active grant, attempt to
@@ -40,8 +41,6 @@ Do not build any of these until using the small version demonstrates a real need
 
 - application picker or settings window;
 - editable or per-application UI configuration;
-- menu-bar item or countdown;
-- launch-at-login integration;
 - persisted grants or restoration after blocker relaunch;
 - versioned schemas, migrations, corrupt-data backups, or a state store;
 - app icons, display-name caching, saved paths, UUID rule identities, or a system
@@ -113,8 +112,7 @@ foregroundExpiryTimer: Timer?
 ```
 
 There is no persisted runtime state. Relaunching the blocker starts with every
-configured application blocked. This is consistent with the accepted ability to
-quit the blocker entirely.
+configured application blocked.
 
 ## Enforcement flow
 
@@ -149,8 +147,7 @@ simple mechanism works; it does not guarantee control of every macOS application
 4. Otherwise set the in-memory deadline before requesting target activation.
 5. Dismiss the blocker and reactivate the remembered target.
 6. Schedule one timer for that foreground target's deadline.
-7. Show the remaining grant as `m:ss` in the menu bar and as a badge on the
-   blocker's Dock icon.
+7. Show the remaining grant as `m:ss` in the menu bar.
 
 There is no durable-write requirement. `UserDefaults` is not part of this flow.
 
@@ -166,8 +163,8 @@ When the foreground timer fires:
 4. Otherwise do nothing. A background target is checked the next time it
    activates.
 
-If the target application terminates, immediately remove its grant, stop the
-timer, and clear the Dock badge. Its next launch starts blocked.
+If the target application terminates, immediately remove its grant and stop the
+timer. Its next launch starts blocked.
 
 If ordinary testing shows that the timer does not reevaluate promptly after wake,
 add one `NSWorkspace.didWakeNotification` observer. Do not add lifecycle machinery
@@ -186,9 +183,9 @@ Sources/
     └── BlockerPanel.swift        # one window and its hold control
 ```
 
-Use AppKit directly. Do not introduce separate watcher, enforcer, repository,
-store, login-item, status-item, coordinator protocol, dependency-injection, or
-event-bus layers.
+Use AppKit directly. Keep persistence to one LaunchAgent plist and two shell
+scripts. Do not introduce a helper process, settings system, coordinator protocol,
+dependency-injection, or event-bus layer.
 
 ## Feasibility spike
 
@@ -224,7 +221,8 @@ Manual v0 checks:
 4. a qualifying release activates Messages;
 5. foreground expiry hides Messages again;
 6. the same behavior works for one other relevant application;
-7. Quit remains an obvious recovery path.
+7. killing the blocker process causes launchd to relaunch it;
+8. the uninstall script cleanly removes the app and LaunchAgent.
 
 Add tests for lifecycle or input cases only after a real failure or regression.
 
@@ -241,17 +239,14 @@ The first usable version is complete when:
 7. successful release grants the calculated wall-clock access;
 8. expiry re-hides a foreground target without quitting it;
 9. a misleading `hide()` return value does not suppress the blocker window;
-10. the app remains easy to quit.
+10. the app has no ordinary Quit command and is relaunched if its process exits.
 
 ## Decisions to revisit only after use
 
 1. Add a picker only if recompiling configuration becomes annoying.
-2. Add a menu-bar item only if the Dock icon is annoying enough to justify a
-   second UI surface.
-3. Add launch-at-login only after the core behavior is worth running daily.
-4. Persist grants only if losing grant state on relaunch causes a real problem.
-5. Add keyboard hold support only if it will actually be used.
-6. Test or support full-screen, other Spaces, and multiple displays according to
+2. Persist grants only if losing grant state on relaunch causes a real problem.
+3. Add keyboard hold support only if it will actually be used.
+4. Test or support full-screen, other Spaces, and multiple displays according to
    the owner's real workflow, not as an abstract compatibility promise.
 
 ## Firefox integration — planned, not built
@@ -369,10 +364,11 @@ The bridge is complete only when tests demonstrate:
   sequencing, and verification gate. The bridge and macOS activity recorder are
   not built. The sibling Firefox extension's standalone visit recorder is built
   and is the future source of browser sessions.
+- 2026-07-20: Added the observed persistence requirement as a menu-bar app plus
+  one per-user LaunchAgent with `RunAtLoad` and `KeepAlive`; no helper process.
 
 ## Immediate next action
 
-Run the packaged app during normal use for a day, then add one other personally
-relevant bundle identifier and verify the same path. Do not add settings,
-persistence, a menu bar, login integration, or future-policy infrastructure
-unless that use exposes a concrete need.
+Install the persistent build and use it normally. Add one other personally
+relevant bundle identifier only if needed; do not add settings or future-policy
+infrastructure without another concrete need.
