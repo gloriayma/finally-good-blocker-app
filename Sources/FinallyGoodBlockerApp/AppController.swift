@@ -140,8 +140,19 @@ final class AppController: NSObject, NSApplicationDelegate {
 
         let targetWindowFrame = visibleWindowFrame(for: application)
         pendingTarget = application
-        let hideRequestReportedSuccess = application.hide()
         blockerPanel.present(over: targetWindowFrame)
+        let hideRequestReportedSuccess = application.hide()
+        let targetProcessIdentifier = application.processIdentifier
+        DispatchQueue.main.async { [weak self] in
+            guard
+                let self,
+                self.pendingTarget?.processIdentifier == targetProcessIdentifier
+            else {
+                return
+            }
+
+            self.blockerPanel.reassertFocus()
+        }
         if !hideRequestReportedSuccess {
             NSLog(
                 "finally-good-blocker-app: hide() returned false for %@; presenting the blocker anyway",
@@ -171,6 +182,7 @@ final class AppController: NSObject, NSApplicationDelegate {
         }
 
         _ = target.hide()
+        blockerPanel.reassertFocus()
     }
 
     private func finishHold(heldSeconds: TimeInterval) {

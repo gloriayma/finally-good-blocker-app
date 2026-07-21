@@ -68,9 +68,13 @@ final class BlockerPanel: NSPanel {
             centerOnActiveScreen()
         }
 
+        reassertFocus()
+    }
+
+    func reassertFocus() {
         NSApp.unhide(nil)
-        orderFrontRegardless()
         NSApp.activate(ignoringOtherApps: true)
+        orderFrontRegardless()
         makeKeyAndOrderFront(nil)
     }
 

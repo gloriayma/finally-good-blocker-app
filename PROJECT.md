@@ -123,10 +123,11 @@ configured application blocked.
 3. Allow the application if `Date.now < accessUntil`.
 4. Listen to launch, unhide, and activation events so interception begins at the
    earliest ordinary workspace event available.
-5. Capture the target's visible window bounds when available, then call `hide()`.
-6. Cover those bounds with the blocker while the asynchronous hide completes.
-7. Remember the target and bring the blocker window forward immediately after
-   the hide request. Retry the hide once after the focus transition settles.
+5. Capture the target's visible window bounds when available.
+6. Cover and focus those bounds with the blocker before calling `hide()`, so the
+   target cannot hand focus to the previously used application as it disappears.
+7. Remember the target, retry the hide once after the transition settles, and
+   reassert blocker focus once at that point.
 8. Present the blocker even if `hide()` returns `false`. On the owner's current
    macOS version, Messages may still hide on the next run-loop turn despite that
    return value.
