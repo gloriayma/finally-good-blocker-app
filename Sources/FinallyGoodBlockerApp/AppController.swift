@@ -22,6 +22,7 @@ final class AppController: NSObject, NSApplicationDelegate {
     private var accessUntilByBundleIdentifier: [String: Date] = [:]
     private var grantProcessIdentifiersByBundleIdentifier: [String: Set<pid_t>] = [:]
     private var pendingTarget: NSRunningApplication?
+    private var pendingTargetExitTimer: Timer?
     private var grantTimer: Timer?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -70,6 +71,7 @@ final class AppController: NSObject, NSApplicationDelegate {
     }
 
     func applicationWillTerminate(_ notification: Notification) {
+        stopPendingTargetExitPolling()
         stopGrantCountdown()
         workspace.notificationCenter.removeObserver(self)
     }
@@ -107,14 +109,24 @@ final class AppController: NSObject, NSApplicationDelegate {
         let grantedBundleIdentifier = grantProcessIdentifiersByBundleIdentifier
             .first(where: { $0.value.contains(application.processIdentifier) })?
             .key
+        let terminatedBundleIdentifier = configuredBundleIdentifier
+            ?? grantedBundleIdentifier
 
-        if let bundleIdentifier = configuredBundleIdentifier ?? grantedBundleIdentifier {
+        if let bundleIdentifier = terminatedBundleIdentifier {
             resetGrant(for: bundleIdentifier)
         }
 
-        if application.processIdentifier == pendingTarget?.processIdentifier {
-            pendingTarget = nil
-            blockerPanel.dismiss()
+        let matchesPendingProcess = application.processIdentifier
+            == pendingTarget?.processIdentifier
+        let matchesPendingBundle = terminatedBundleIdentifier != nil
+            && terminatedBundleIdentifier == pendingTarget?.bundleIdentifier
+
+        if matchesPendingProcess || matchesPendingBundle {
+            dismissPendingBlocker()
+            NSLog(
+                "finally-good-blocker-app: dismissed blocker after %@ terminated",
+                terminatedBundleIdentifier ?? "unknown application"
+            )
         }
     }
 
@@ -131,6 +143,7 @@ final class AppController: NSObject, NSApplicationDelegate {
             grantProcessIdentifiersByBundleIdentifier[bundleIdentifier, default: []]
                 .insert(application.processIdentifier)
             pendingTarget = nil
+            stopPendingTargetExitPolling()
             blockerPanel.dismiss()
             startGrantCountdown(for: rule, until: accessUntil)
             return
@@ -140,6 +153,7 @@ final class AppController: NSObject, NSApplicationDelegate {
 
         let targetWindowFrame = visibleWindowFrame(for: application)
         pendingTarget = application
+        startPendingTargetExitPolling(for: bundleIdentifier)
         blockerPanel.present(over: targetWindowFrame)
         let hideRequestReportedSuccess = application.hide()
         let targetProcessIdentifier = application.processIdentifier
@@ -209,11 +223,62 @@ final class AppController: NSObject, NSApplicationDelegate {
                 .map(\.processIdentifier)
         )
         pendingTarget = nil
+        stopPendingTargetExitPolling()
         blockerPanel.dismiss()
 
         _ = target.unhide()
         _ = target.activate(options: [.activateAllWindows])
         startGrantCountdown(for: rule, until: accessUntil)
+    }
+
+    private func startPendingTargetExitPolling(for bundleIdentifier: String) {
+        stopPendingTargetExitPolling()
+
+        let timer = Timer(
+            timeInterval: 0.25,
+            target: self,
+            selector: #selector(pendingTargetExitTimerFired(_:)),
+            userInfo: bundleIdentifier,
+            repeats: true
+        )
+        pendingTargetExitTimer = timer
+        RunLoop.main.add(timer, forMode: .common)
+    }
+
+    @objc private func pendingTargetExitTimerFired(_ timer: Timer) {
+        guard
+            let bundleIdentifier = timer.userInfo as? String,
+            pendingTarget?.bundleIdentifier == bundleIdentifier
+        else {
+            stopPendingTargetExitPolling()
+            return
+        }
+
+        guard NSRunningApplication.runningApplications(
+            withBundleIdentifier: bundleIdentifier
+        ).isEmpty else {
+            return
+        }
+
+        resetGrant(for: bundleIdentifier)
+        dismissPendingBlocker()
+    }
+
+    private func stopPendingTargetExitPolling() {
+        pendingTargetExitTimer?.invalidate()
+        pendingTargetExitTimer = nil
+    }
+
+    private func dismissPendingBlocker() {
+        NSObject.cancelPreviousPerformRequests(
+            withTarget: self,
+            selector: #selector(retryPendingTargetHide),
+            object: nil
+        )
+        pendingTarget = nil
+        stopPendingTargetExitPolling()
+        blockerPanel.dismiss()
+        NSApp.hide(nil)
     }
 
     private func startGrantCountdown(for rule: Rule, until deadline: Date) {

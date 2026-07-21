@@ -49,8 +49,8 @@ Do not build any of these until using the small version demonstrates a real need
   handling unless personally needed;
 - full-screen, every-Space, or multiple-display guarantees;
 - sandbox compatibility work;
-- Accessibility permission, helper processes, overlays, polling, or privileged
-  enforcement;
+- Accessibility permission, helper processes, broad enforcement polling, or
+  privileged enforcement;
 - escalation, recovery levels, arbitrary access curves, combined reports, or
   cross-process activity import;
 - distribution, notarization, checksums, screenshots, or release packaging.
@@ -164,8 +164,11 @@ When the foreground timer fires:
 4. Otherwise do nothing. A background target is checked the next time it
    activates.
 
-If the target application terminates, immediately remove its grant and stop the
-timer. Its next launch starts blocked.
+If the target application terminates, match it to the pending target by bundle ID
+as well as PID, immediately remove its grant, cancel pending refocus work, and
+dismiss the blocker. While the blocker is visible, a narrow quarter-second process
+existence check is the fallback for missed or incomplete termination notifications.
+Its next launch starts blocked.
 
 If ordinary testing shows that the timer does not reevaluate promptly after wake,
 add one `NSWorkspace.didWakeNotification` observer. Do not add lifecycle machinery

@@ -52,6 +52,7 @@ the grant and countdown, so its next launch is blocked again.
 
 This reset is tied to actual process termination. Use Messages → Quit Messages or
 Command-Q; closing the red window leaves Messages running and does not reset time.
+When the Messages process terminates, the blocker window closes immediately.
 
 When a grant expires, every running Messages instance is hidden immediately. The
 app is not force-quit, so drafts and open conversations remain intact.
