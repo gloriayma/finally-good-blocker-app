@@ -25,7 +25,6 @@ final class AppController: NSObject, NSApplicationDelegate {
     private var grantTimer: Timer?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        installMainMenu()
         installStatusItem()
 
         blockerPanel.onHoldFinished = { [weak self] heldSeconds in
@@ -217,27 +216,6 @@ final class AppController: NSObject, NSApplicationDelegate {
         startGrantCountdown(for: rule, until: accessUntil)
     }
 
-    private func quitPendingTarget() {
-        guard let target = pendingTarget else {
-            return
-        }
-
-        NSLog(
-            "finally-good-blocker-app: Command-Q requested termination of %@",
-            target.bundleIdentifier ?? "unknown application"
-        )
-        if !target.terminate() {
-            NSLog(
-                "finally-good-blocker-app: terminate() returned false for %@",
-                target.bundleIdentifier ?? "unknown application"
-            )
-        }
-    }
-
-    @objc private func quitPendingTargetFromMenu(_ sender: Any?) {
-        quitPendingTarget()
-    }
-
     private func startGrantCountdown(for rule: Rule, until deadline: Date) {
         grantTimer?.invalidate()
         updateCountdown(until: deadline)
@@ -381,31 +359,6 @@ final class AppController: NSObject, NSApplicationDelegate {
         button.imagePosition = .imageOnly
         button.title = ""
         button.toolTip = "finally-good-blocker-app is running"
-    }
-
-    private func installMainMenu() {
-        let mainMenu = NSMenu()
-        let applicationMenuItem = NSMenuItem(
-            title: "finally-good-blocker-app",
-            action: nil,
-            keyEquivalent: ""
-        )
-        let applicationMenu = NSMenu(title: "finally-good-blocker-app")
-        applicationMenu.autoenablesItems = false
-
-        let quitTargetItem = NSMenuItem(
-            title: "Quit blocked application",
-            action: #selector(quitPendingTargetFromMenu(_:)),
-            keyEquivalent: "q"
-        )
-        quitTargetItem.keyEquivalentModifierMask = [.command]
-        quitTargetItem.target = self
-        quitTargetItem.isEnabled = true
-        applicationMenu.addItem(quitTargetItem)
-
-        applicationMenuItem.submenu = applicationMenu
-        mainMenu.addItem(applicationMenuItem)
-        NSApp.mainMenu = mainMenu
     }
 
 }
