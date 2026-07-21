@@ -135,8 +135,9 @@ configured application blocked.
    focus stealing. It appears above the application macOS selects after hiding
    the target, but does not remain always-on-top after the user switches away.
    Closing it grants nothing; activating the target again presents it again.
-10. Route Command-Q from the focused blocker to a graceful termination request
-    for the pending target; never terminate the persistent blocker from that key.
+10. Give the blocker app's main menu a Command-Q key equivalent that sends a
+    graceful termination request to the pending target; never map that key to
+    termination of the persistent blocker itself.
 
 `NSRunningApplication.hide()` is cooperative and race-prone. A target may unhide
 itself. The first version provides useful friction for applications on which the

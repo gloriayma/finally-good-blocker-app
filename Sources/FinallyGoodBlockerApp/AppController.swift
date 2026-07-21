@@ -23,27 +23,13 @@ final class AppController: NSObject, NSApplicationDelegate {
     private var grantProcessIdentifiersByBundleIdentifier: [String: Set<pid_t>] = [:]
     private var pendingTarget: NSRunningApplication?
     private var grantTimer: Timer?
-    private var keyDownMonitor: Any?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        installMainMenu()
         installStatusItem()
 
         blockerPanel.onHoldFinished = { [weak self] heldSeconds in
             self?.finishHold(heldSeconds: heldSeconds)
-        }
-        keyDownMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) {
-            [weak self] event in
-            guard
-                let self,
-                self.blockerPanel.isKeyWindow,
-                self.pendingTarget != nil,
-                Self.isCommandQ(event)
-            else {
-                return event
-            }
-
-            self.quitPendingTarget()
-            return nil
         }
 
         workspace.notificationCenter.addObserver(
@@ -87,9 +73,6 @@ final class AppController: NSObject, NSApplicationDelegate {
     func applicationWillTerminate(_ notification: Notification) {
         stopGrantCountdown()
         workspace.notificationCenter.removeObserver(self)
-        if let keyDownMonitor {
-            NSEvent.removeMonitor(keyDownMonitor)
-        }
     }
 
     @objc private func applicationActivated(_ notification: Notification) {
@@ -239,6 +222,10 @@ final class AppController: NSObject, NSApplicationDelegate {
             return
         }
 
+        NSLog(
+            "finally-good-blocker-app: Command-Q requested termination of %@",
+            target.bundleIdentifier ?? "unknown application"
+        )
         if !target.terminate() {
             NSLog(
                 "finally-good-blocker-app: terminate() returned false for %@",
@@ -247,11 +234,8 @@ final class AppController: NSObject, NSApplicationDelegate {
         }
     }
 
-    private static func isCommandQ(_ event: NSEvent) -> Bool {
-        let disallowedModifiers: NSEvent.ModifierFlags = [.control, .option, .shift]
-        return event.modifierFlags.contains(.command)
-            && event.modifierFlags.intersection(disallowedModifiers).isEmpty
-            && event.charactersIgnoringModifiers?.lowercased() == "q"
+    @objc private func quitPendingTargetFromMenu(_ sender: Any?) {
+        quitPendingTarget()
     }
 
     private func startGrantCountdown(for rule: Rule, until deadline: Date) {
@@ -397,6 +381,31 @@ final class AppController: NSObject, NSApplicationDelegate {
         button.imagePosition = .imageOnly
         button.title = ""
         button.toolTip = "finally-good-blocker-app is running"
+    }
+
+    private func installMainMenu() {
+        let mainMenu = NSMenu()
+        let applicationMenuItem = NSMenuItem(
+            title: "finally-good-blocker-app",
+            action: nil,
+            keyEquivalent: ""
+        )
+        let applicationMenu = NSMenu(title: "finally-good-blocker-app")
+        applicationMenu.autoenablesItems = false
+
+        let quitTargetItem = NSMenuItem(
+            title: "Quit blocked application",
+            action: #selector(quitPendingTargetFromMenu(_:)),
+            keyEquivalent: "q"
+        )
+        quitTargetItem.keyEquivalentModifierMask = [.command]
+        quitTargetItem.target = self
+        quitTargetItem.isEnabled = true
+        applicationMenu.addItem(quitTargetItem)
+
+        applicationMenuItem.submenu = applicationMenu
+        mainMenu.addItem(applicationMenuItem)
+        NSApp.mainMenu = mainMenu
     }
 
 }
