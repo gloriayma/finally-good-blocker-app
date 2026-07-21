@@ -9,6 +9,7 @@ final class BlockerPanel: NSPanel {
         get { holdControl.onHoldFinished }
         set { holdControl.onHoldFinished = newValue }
     }
+    var onQuitRequested: (() -> Void)?
 
     init() {
         super.init(
@@ -49,6 +50,18 @@ final class BlockerPanel: NSPanel {
     }
 
     override var canBecomeKey: Bool { true }
+
+    override func performKeyEquivalent(with event: NSEvent) -> Bool {
+        let disallowedModifiers: NSEvent.ModifierFlags = [.control, .option, .shift]
+        if event.modifierFlags.contains(.command),
+           event.modifierFlags.intersection(disallowedModifiers).isEmpty,
+           event.charactersIgnoringModifiers?.lowercased() == "q" {
+            onQuitRequested?()
+            return true
+        }
+
+        return super.performKeyEquivalent(with: event)
+    }
 
     func present(over targetFrame: NSRect?) {
         if let targetFrame {

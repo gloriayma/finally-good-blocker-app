@@ -30,6 +30,9 @@ final class AppController: NSObject, NSApplicationDelegate {
         blockerPanel.onHoldFinished = { [weak self] heldSeconds in
             self?.finishHold(heldSeconds: heldSeconds)
         }
+        blockerPanel.onQuitRequested = { [weak self] in
+            self?.quitPendingTarget()
+        }
 
         workspace.notificationCenter.addObserver(
             self,
@@ -214,6 +217,19 @@ final class AppController: NSObject, NSApplicationDelegate {
         _ = target.unhide()
         _ = target.activate(options: [.activateAllWindows])
         startGrantCountdown(for: rule, until: accessUntil)
+    }
+
+    private func quitPendingTarget() {
+        guard let target = pendingTarget else {
+            return
+        }
+
+        if !target.terminate() {
+            NSLog(
+                "finally-good-blocker-app: terminate() returned false for %@",
+                target.bundleIdentifier ?? "unknown application"
+            )
+        }
     }
 
     private func startGrantCountdown(for rule: Rule, until deadline: Date) {

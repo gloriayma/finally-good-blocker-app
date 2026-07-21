@@ -42,6 +42,9 @@ When a target is blocked, its window is hidden and a normal blocker window opens
 You may close that window or switch away from it; neither action grants access.
 Activating the target again reopens the blocker.
 
+While the blocker is focused, Command-Q gracefully quits the blocked application,
+not the persistent blocker.
+
 The blocker listens for target launch, unhide, and activation events. When window
 bounds are available, it covers the target's visible window directly to reduce
 content flashing while the asynchronous hide request completes.
