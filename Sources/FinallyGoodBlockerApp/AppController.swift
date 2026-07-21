@@ -23,6 +23,7 @@ final class AppController: NSObject, NSApplicationDelegate {
     private var grantProcessIdentifiersByBundleIdentifier: [String: Set<pid_t>] = [:]
     private var pendingTarget: NSRunningApplication?
     private var grantTimer: Timer?
+    private var keyDownMonitor: Any?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         installStatusItem()
@@ -30,8 +31,19 @@ final class AppController: NSObject, NSApplicationDelegate {
         blockerPanel.onHoldFinished = { [weak self] heldSeconds in
             self?.finishHold(heldSeconds: heldSeconds)
         }
-        blockerPanel.onQuitRequested = { [weak self] in
-            self?.quitPendingTarget()
+        keyDownMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) {
+            [weak self] event in
+            guard
+                let self,
+                self.blockerPanel.isKeyWindow,
+                self.pendingTarget != nil,
+                Self.isCommandQ(event)
+            else {
+                return event
+            }
+
+            self.quitPendingTarget()
+            return nil
         }
 
         workspace.notificationCenter.addObserver(
@@ -75,6 +87,9 @@ final class AppController: NSObject, NSApplicationDelegate {
     func applicationWillTerminate(_ notification: Notification) {
         stopGrantCountdown()
         workspace.notificationCenter.removeObserver(self)
+        if let keyDownMonitor {
+            NSEvent.removeMonitor(keyDownMonitor)
+        }
     }
 
     @objc private func applicationActivated(_ notification: Notification) {
@@ -230,6 +245,13 @@ final class AppController: NSObject, NSApplicationDelegate {
                 target.bundleIdentifier ?? "unknown application"
             )
         }
+    }
+
+    private static func isCommandQ(_ event: NSEvent) -> Bool {
+        let disallowedModifiers: NSEvent.ModifierFlags = [.control, .option, .shift]
+        return event.modifierFlags.contains(.command)
+            && event.modifierFlags.intersection(disallowedModifiers).isEmpty
+            && event.charactersIgnoringModifiers?.lowercased() == "q"
     }
 
     private func startGrantCountdown(for rule: Rule, until deadline: Date) {
